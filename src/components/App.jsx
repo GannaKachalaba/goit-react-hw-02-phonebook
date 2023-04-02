@@ -15,17 +15,25 @@ class App extends Component {
 
   addContact = ({ name, number }) => {
     const { contacts } = this.state;
+
+    const isInContacts = contacts.some(
+      contact => contact.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (isInContacts) {
+      Report.warning(
+        `${name}`,
+        'This user is already in the contact list.',
+        'OK'
+      );
+      return;
+    }
+
     const newContact = { id: nanoid(), name, number };
 
-    contacts.some(contact => contact.name === name)
-      ? Report.warning(
-          `${name}`,
-          'This user is already in the contact list.',
-          'OK'
-        )
-      : this.setState(({ contacts }) => ({
-          contacts: [newContact, ...contacts],
-        }));
+    this.setState(({ contacts }) => ({
+      contacts: [newContact, ...contacts],
+    }));
   };
 
   deleteContact = contactId => {
@@ -47,26 +55,22 @@ class App extends Component {
   };
 
   render() {
-    const { filter } = this.state;
-    const addContact = this.addContact;
-    const changeFilter = this.changeFilter;
+    const { filter, contacts } = this.state;
     const filtredContacts = this.filtredContacts();
-    const deleteContact = this.deleteContact;
-    const length = this.state.contacts.length;
+    const showContacts = contacts.length > 0;
 
     return (
       <div className={css.container}>
         <h1 className={css.title}>
           Phone<span className={css.title__color}>book</span>
         </h1>
-        <ContactForm onSubmit={addContact} />
-
+        <ContactForm onSubmit={this.addContact} />
         <h2 className={css.subtitle}>Contacts</h2>
-        <Filter filter={filter} changeFilter={changeFilter} />
-        {length > 0 ? (
+        <Filter filter={filter} changeFilter={this.changeFilter} />
+        {showContacts ? (
           <ContactList
             contacts={filtredContacts}
-            onDeleteContact={deleteContact}
+            onDeleteContact={this.deleteContact}
           />
         ) : (
           <Message text="Contact list is empty." />
